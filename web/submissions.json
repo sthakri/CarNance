@@ -46,5 +46,39 @@
         "mode": "recommend"
       }
     }
+  },
+  {
+    "id": "fnhv4rgzd4o",
+    "timestamp": "2025-10-18T22:35:58.030Z",
+    "data": {
+      "name": "ram kumar ",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": null,
+      "dailyMiles": 25,
+      "financePath": "buy",
+      "preferences": {
+        "mode": "recommend"
+      }
+    }
+  },
+  {
+    "id": "9m9vhhj5i8k",
+    "timestamp": "2025-10-18T22:36:48.076Z",
+    "data": {
+      "name": "Kritagya ",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": null,
+      "dailyMiles": 25,
+      "financePath": "buy",
+      "preferences": {
+        "mode": "recommend"
+      }
+    }
   }
 ]

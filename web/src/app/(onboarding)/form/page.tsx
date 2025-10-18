@@ -23,6 +23,7 @@ type FormValues = {
   creditScore: "300-579" | "580-669" | "670-739" | "740-799" | "800-850";
   assets?: number;
   dailyMiles: number;
+  financePath: "lease" | "buy" | "credit-build";
   preferences: {
     mode: "recommend" | "choose";
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";
@@ -49,6 +50,7 @@ export default function OnboardingFormPage() {
       creditScore: "670-739",
       assets: undefined,
       dailyMiles: 25,
+      financePath: "buy",
       preferences: { mode: "recommend" },
     },
   });
@@ -173,6 +175,62 @@ export default function OnboardingFormPage() {
                     <p className="mt-1 text-xs text-red-300">{errors.dailyMiles.message as string}</p>
                   )}
                 </div>
+              </div>
+
+              <Separator className="bg-white/10" />
+
+              <div>
+                <label className="mb-2 block text-sm font-medium">Finance Path</label>
+                <Controller
+                  control={control}
+                  name="financePath"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      value={field.value}
+                      className="grid grid-cols-1 gap-3 md:grid-cols-3"
+                    >
+                      <div className="flex flex-col space-y-2 rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="lease" id="lease" />
+                          <label htmlFor="lease" className="font-semibold">
+                            Lease Path
+                          </label>
+                        </div>
+                        <p className="text-xs text-white/60 pl-6">
+                          Lower monthly payments, drive new cars every few years, flexible
+                        </p>
+                      </div>
+                      <div className="flex flex-col space-y-2 rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="buy" id="buy" />
+                          <label htmlFor="buy" className="font-semibold">
+                            Buy Path
+                          </label>
+                        </div>
+                        <p className="text-xs text-white/60 pl-6">
+                          Own your car, build equity, no mileage limits, long-term savings
+                        </p>
+                      </div>
+                      <div className="flex flex-col space-y-2 rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="credit-build" id="credit-build" />
+                          <label htmlFor="credit-build" className="font-semibold">
+                            Credit-Build Path
+                          </label>
+                        </div>
+                        <p className="text-xs text-white/60 pl-6">
+                          Improve credit score, affordable payments, build financial history
+                        </p>
+                      </div>
+                    </RadioGroup>
+                  )}
+                />
+                <p className="mt-2 text-xs text-white/60">Choose your financing strategy.</p>
+                {errors.financePath && (
+                  <p className="mt-1 text-xs text-red-300">{errors.financePath.message as string}</p>
+                )}
               </div>
 
               <Separator className="bg-white/10" />

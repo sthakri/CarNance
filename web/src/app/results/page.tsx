@@ -230,6 +230,17 @@ export default function ResultsPage() {
           ))}
         </div>
 
+        <div className="flex justify-center">
+          <Button
+            onClick={() => router.push("/insights")}
+            size="lg"
+            className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500"
+          >
+            <TrendingUp className="mr-2 size-5" />
+            View Financial Insights & 5-Year Projections
+          </Button>
+        </div>
+
         <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
           <CardContent className="p-6">
             <h3 className="mb-4 text-lg font-semibold">About Your Recommendations</h3>

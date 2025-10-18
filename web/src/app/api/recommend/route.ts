@@ -11,6 +11,7 @@ type OnboardingData = {
   creditScore: "300-579" | "580-669" | "670-739" | "740-799" | "800-850";
   assets?: number;
   dailyMiles: number;
+  financePath: "lease" | "buy" | "credit-build";
   preferences: {
     mode: "recommend" | "choose";
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";
@@ -159,6 +160,42 @@ function scoreVehicle(vehicle: Vehicle, data: OnboardingData): {
     if (paymentDiff < targetPayment * 0.1) {
       score += 15;
       reasons.push("Matches your target payment");
+    }
+  }
+  
+  // 6. Finance path optimization (15% weight)
+  if (data.financePath === "lease") {
+    // Prefer newer, low-depreciation vehicles
+    if (vehicle.year >= 2024) {
+      score += 10;
+      reasons.push("Great lease option");
+    }
+    // Hybrids/EVs have good lease incentives
+    if (vehicle.fuelType === "hybrid" || vehicle.fuelType === "electric") {
+      score += 5;
+      reasons.push("Strong lease incentives");
+    }
+  } else if (data.financePath === "buy") {
+    // Prefer reliable, good resale value
+    if (vehicle.fuelType === "hybrid") {
+      score += 10;
+      reasons.push("Excellent resale value");
+    }
+    // Long-term fuel savings matter more
+    if (vehicle.mpgCombined >= 35) {
+      score += 5;
+      reasons.push("Long-term fuel savings");
+    }
+  } else if (data.financePath === "credit-build") {
+    // Prioritize affordability and consistency
+    if (monthlyPayment < maxPayment * 0.7) {
+      score += 15;
+      reasons.push("Very affordable for credit building");
+    }
+    // Reliable cars help maintain consistent payments
+    if (vehicle.year >= 2023) {
+      score += 5;
+      reasons.push("Reliable with warranty coverage");
     }
   }
   
