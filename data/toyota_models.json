@@ -1,0 +1,58 @@
+[
+  {
+    "name": "Corolla",
+    "type": "Gas",
+    "msrp": 23000,
+    "mpg": 32,
+    "size": "Sedan",
+    "aprBase": 0.06,
+    "leaseResidualPct": 0.58
+  },
+  {
+    "name": "Corolla Hybrid",
+    "type": "Hybrid",
+    "msrp": 24500,
+    "mpg": 50,
+    "size": "Sedan",
+    "aprBase": 0.055,
+    "leaseResidualPct": 0.60
+  },
+  {
+    "name": "Prius",
+    "type": "Hybrid",
+    "msrp": 28000,
+    "mpg": 52,
+    "size": "Sedan",
+    "aprBase": 0.055,
+    "leaseResidualPct": 0.62
+  },
+  {
+    "name": "RAV4",
+    "type": "Gas",
+    "msrp": 30000,
+    "mpg": 30,
+    "size": "SUV",
+    "aprBase": 0.06,
+    "leaseResidualPct": 0.58
+  },
+  {
+    "name": "RAV4 Hybrid",
+    "type": "Hybrid",
+    "msrp": 32000,
+    "mpg": 40,
+    "size": "SUV",
+    "aprBase": 0.055,
+    "leaseResidualPct": 0.60
+  },
+  {
+    "name": "bZ4X",
+    "type": "EV",
+    "msrp": 42000,
+    "mpge": 100,
+    "size": "SUV",
+    "aprBase": 0.05,
+    "leaseResidualPct": 0.58
+  }
+]
+
+
