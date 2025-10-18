@@ -1,0 +1,19 @@
+[
+  {
+    "id": "cz4xon7y38",
+    "timestamp": "2025-10-18T23:06:25.357Z",
+    "data": {
+      "name": "Anup Basent ",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": 20000,
+      "dailyMiles": 25,
+      "financePath": "buy",
+      "preferences": {
+        "mode": "recommend"
+      }
+    }
+  }
+]

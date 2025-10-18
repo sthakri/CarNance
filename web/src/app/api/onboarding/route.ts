@@ -10,12 +10,20 @@ export async function POST(request: Request) {
     
     // Save to a simple JSON file
     const filePath = path.join(process.cwd(), "submissions.json");
-    let submissions = [];
+    let submissions: any[] = [];
     
     // Read existing submissions if file exists
     if (fs.existsSync(filePath)) {
-      const fileContent = fs.readFileSync(filePath, "utf-8");
-      submissions = JSON.parse(fileContent);
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf-8");
+        if (fileContent && fileContent.trim().length > 0) {
+          const parsed = JSON.parse(fileContent);
+          submissions = Array.isArray(parsed) ? parsed : [];
+        }
+      } catch {
+        // If file is empty or corrupted, reset to empty array
+        submissions = [];
+      }
     }
     
     // Add new submission
@@ -44,7 +52,15 @@ export async function GET(request: Request) {
     }
 
     const fileContent = fs.readFileSync(filePath, "utf-8");
-    const submissions: Array<{ id: string; timestamp: string; data: unknown }> = JSON.parse(fileContent);
+    let submissions: Array<{ id: string; timestamp: string; data: unknown }> = [];
+    try {
+      if (fileContent && fileContent.trim().length > 0) {
+        const parsed = JSON.parse(fileContent);
+        submissions = Array.isArray(parsed) ? parsed : [];
+      }
+    } catch {
+      submissions = [];
+    }
 
     if (id) {
       const found = submissions.find((s) => s.id === id);
