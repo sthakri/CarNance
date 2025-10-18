@@ -51,16 +51,22 @@ export default function ResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!lastSubmitted) {
-      // No onboarding data - redirect to form
-      router.push("/form");
-      return;
-    }
-
-    async function fetchRecommendations() {
+    async function getUserAndRecommend() {
       try {
         setLoading(true);
-        const res = await axios.post<ApiResponse>("/api/recommend", lastSubmitted);
+
+        // If Redux has no data (e.g., page refresh), load latest submission from API
+        let payload = lastSubmitted as any;
+        if (!payload) {
+          const latestRes = await axios.get("/api/onboarding?latest=1");
+          payload = latestRes.data?.submission?.data;
+          if (!payload) {
+            router.push("/form");
+            return;
+          }
+        }
+
+        const res = await axios.post<ApiResponse>("/api/recommend", payload);
         setData(res.data);
       } catch (e: any) {
         setError(e?.message ?? "Failed to load recommendations");
@@ -69,7 +75,7 @@ export default function ResultsPage() {
       }
     }
 
-    fetchRecommendations();
+    getUserAndRecommend();
   }, [lastSubmitted, router]);
 
   if (loading) {

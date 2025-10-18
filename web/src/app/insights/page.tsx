@@ -79,29 +79,35 @@ export default function InsightsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!lastSubmitted) {
-      router.push("/form");
-      return;
-    }
-
     async function fetchInsights() {
       try {
         setLoading(true);
-        
+
+        // Recover user data if Redux is empty
+        let userData = lastSubmitted as any;
+        if (!userData) {
+          const latestRes = await axios.get("/api/onboarding?latest=1");
+          userData = latestRes.data?.submission?.data;
+          if (!userData) {
+            router.push("/form");
+            return;
+          }
+        }
+
         // First get recommendations
-        const recRes = await axios.post("/api/recommend", lastSubmitted);
+        const recRes = await axios.post("/api/recommend", userData);
         const recommendations = recRes.data.recommendations;
-        
+
         // Then get insights
         const insightsRes = await axios.post("/api/insights", {
-          userData: lastSubmitted,
+          userData,
           recommendedVehicles: recommendations.map((r: any) => ({
             vehicleId: r.vehicle.id,
             monthlyPayment: r.monthlyPayment,
             rank: r.rank,
           })),
         });
-        
+
         setInsights(insightsRes.data.insights);
       } catch (e: any) {
         setError(e?.message ?? "Failed to load insights");
