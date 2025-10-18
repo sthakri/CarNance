@@ -1,5 +1,9 @@
 "use client";
 import { Controller, useForm } from "react-hook-form";
+import { useAppDispatch } from "@/lib/store";
+import { saveSubmitted, setStatus, setError } from "@/lib/store/slices/onboardingSlice";
+import axios from "axios";
+import { toast } from "sonner";
 import { CelestialBackground } from "@/components/celestial/celestial-background";
 import { PageHeader } from "@/components/layout/page-header";
 import { Button } from "@/components/ui/button";
@@ -27,6 +31,7 @@ type FormValues = {
 };
 
 export default function OnboardingFormPage() {
+  const dispatch = useAppDispatch();
   const {
     control,
     register,
@@ -46,9 +51,25 @@ export default function OnboardingFormPage() {
     },
   });
 
-  function onSubmit(values: FormValues) {
-    // TODO: integrate API call
-    console.log("Onboarding values", values);
+  async function onSubmit(values: FormValues) {
+    try {
+      dispatch(setStatus("saving"));
+      // Save to Redux (last submitted)
+      dispatch(saveSubmitted(values));
+      // Send to API route
+      const res = await axios.post("/api/onboarding", values);
+      if (res.status >= 200 && res.status < 300) {
+        toast.success("Onboarding saved!", { description: `ID: ${res.data.id}` });
+        dispatch(setStatus("success"));
+      } else {
+        throw new Error("Non-2xx response");
+      }
+    } catch (e: any) {
+      dispatch(setStatus("error"));
+      const msg = e?.message ?? "Failed to submit";
+      dispatch(setError(msg));
+      toast.error("Submission failed", { description: msg });
+    }
   }
 
   const mode = watch("preferences.mode");

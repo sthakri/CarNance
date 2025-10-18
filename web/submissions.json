@@ -1,0 +1,18 @@
+[
+  {
+    "id": "i9rqntib1w",
+    "timestamp": "2025-10-18T21:38:03.821Z",
+    "data": {
+      "name": "anup basnet",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": 5000000,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend"
+      }
+    }
+  }
+]
