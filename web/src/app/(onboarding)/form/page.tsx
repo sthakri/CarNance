@@ -1,5 +1,6 @@
 "use client";
 import { Controller, useForm } from "react-hook-form";
+import { useRouter } from "next/navigation";
 import { useAppDispatch } from "@/lib/store";
 import { saveSubmitted, setStatus, setError } from "@/lib/store/slices/onboardingSlice";
 import axios from "axios";
@@ -31,6 +32,7 @@ type FormValues = {
 };
 
 export default function OnboardingFormPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const {
     control,
@@ -61,6 +63,10 @@ export default function OnboardingFormPage() {
       if (res.status >= 200 && res.status < 300) {
         toast.success("Onboarding saved!", { description: `ID: ${res.data.id}` });
         dispatch(setStatus("success"));
+        // Redirect to results page
+        setTimeout(() => {
+          router.push("/results");
+        }, 500);
       } else {
         throw new Error("Non-2xx response");
       }

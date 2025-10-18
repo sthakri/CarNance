@@ -14,5 +14,37 @@
         "mode": "recommend"
       }
     }
+  },
+  {
+    "id": "f0g8uo8yxt",
+    "timestamp": "2025-10-18T22:13:23.957Z",
+    "data": {
+      "name": "anup basent 1",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": 500000,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend"
+      }
+    }
+  },
+  {
+    "id": "l5kibe5kt4s",
+    "timestamp": "2025-10-18T22:14:19.092Z",
+    "data": {
+      "name": "anup basent 2 ",
+      "age": 22,
+      "monthlyIncome": 100,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": 1000,
+      "dailyMiles": 10,
+      "preferences": {
+        "mode": "recommend"
+      }
+    }
   }
 ]
