@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Skip ESLint during `next build` (use `npm run lint` or editor for linting)
   eslint: {
-    // Skip running ESLint during `next build` to speed up CI or local builds.
-    // Next.js will still respect `npm run lint` and your editor integrations.
     ignoreDuringBuilds: true,
   },
 };

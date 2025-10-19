@@ -175,5 +175,28 @@
       },
       "financePath": "lease"
     }
+  },
+  {
+    "id": "42jnrg7c0lx",
+    "timestamp": "2025-10-19T09:16:20.917Z",
+    "data": {
+      "name": "Anup basnet",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": 50000,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend",
+        "ownershipYears": 5,
+        "region": "TX",
+        "downPayment": 5,
+        "fuelPreference": "gas",
+        "usage": "family",
+        "riskTolerance": "high"
+      },
+      "financePath": "lease"
+    }
   }
 ]

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState } from "react";
 import { useAppSelector } from "@/lib/store";
 import { useRouter, useSearchParams } from "next/navigation";
 import axios from "axios";
@@ -84,7 +84,7 @@ type VehicleInsights = {
   };
 };
 
-function InsightsPageContent() {
+export default function InsightsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const lastSubmitted = useAppSelector((state) => state.onboarding.lastSubmitted);
@@ -478,33 +478,5 @@ function InsightsPageContent() {
         </Card>
       </section>
     </main>
-  );
-}
-
-export default function InsightsPage() {
-  return (
-    <Suspense fallback={
-      <main className="relative mx-auto max-w-7xl px-6 py-10">
-        <CelestialBackground />
-        <section className="relative z-10 space-y-8">
-          <PageHeader
-            title="Loading insights..."
-            subtitle="Please wait"
-          />
-          <div className="grid grid-cols-1 gap-6">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="border-white/10 bg-white/5 backdrop-blur">
-                <CardContent className="p-6 space-y-3">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-32 w-full" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-      </main>
-    }>
-      <InsightsPageContent />
-    </Suspense>
   );
 }

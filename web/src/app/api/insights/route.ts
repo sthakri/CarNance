@@ -424,10 +424,42 @@ function generateRecommendation(
 
 export async function POST(request: Request) {
   try {
-    const { userData, recommendedVehicles } = await request.json() as {
-      userData: OnboardingData;
-      recommendedVehicles: { vehicleId: string; monthlyPayment: number; rank: number }[];
-    };
+    const body = await request.json();
+    const userData: OnboardingData = {
+      name: body?.userData?.name,
+      age: Number(body?.userData?.age),
+      monthlyIncome: Number(body?.userData?.monthlyIncome),
+      spouseIncome: body?.userData?.spouseIncome ? Number(body?.userData?.spouseIncome) : undefined,
+      creditScore: body?.userData?.creditScore,
+      assets: body?.userData?.assets ? Number(body?.userData?.assets) : undefined,
+      dailyMiles: Number(body?.userData?.dailyMiles),
+      financePath: body?.userData?.financePath,
+      preferences: {
+        mode: body?.userData?.preferences?.mode ?? "recommend",
+        carType: body?.userData?.preferences?.carType,
+        budget: body?.userData?.preferences?.budget ? Number(body?.userData?.preferences?.budget) : undefined,
+        downPayment: body?.userData?.preferences?.downPayment ? Number(body?.userData?.preferences?.downPayment) : undefined,
+        fuelPreference: body?.userData?.preferences?.fuelPreference ?? "any",
+        ownershipYears: body?.userData?.preferences?.ownershipYears ? Number(body?.userData?.preferences?.ownershipYears) : undefined,
+        region: body?.userData?.preferences?.region,
+        usage: body?.userData?.preferences?.usage,
+        riskTolerance: body?.userData?.preferences?.riskTolerance,
+      },
+    } as OnboardingData;
+    const recommendedVehicles = (body?.recommendedVehicles ?? []) as { vehicleId: string; monthlyPayment: number; rank: number }[];
+
+    // Guards
+    const missing: string[] = [];
+    if (!userData.monthlyIncome && userData.monthlyIncome !== 0) missing.push("userData.monthlyIncome");
+    if (!userData.creditScore) missing.push("userData.creditScore");
+    if (!userData.dailyMiles && userData.dailyMiles !== 0) missing.push("userData.dailyMiles");
+    if (!Array.isArray(recommendedVehicles) || recommendedVehicles.length === 0) missing.push("recommendedVehicles");
+    if (missing.length) {
+      return NextResponse.json(
+        { ok: false, error: `Missing required fields: ${missing.join(", ")}` },
+        { status: 400 }
+      );
+    }
     
     // Calculate projections for all recommended vehicles
     const allProjections = recommendedVehicles.map((rec) => {
@@ -470,7 +502,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, insights });
   } catch (e: any) {
     return NextResponse.json(
-      { ok: false, error: e?.message ?? "Invalid request" },
+      { ok: false, error: `Invalid request: ${e?.message ?? "unknown"}` },
       { status: 400 }
     );
   }

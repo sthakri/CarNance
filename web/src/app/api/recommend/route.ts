@@ -309,7 +309,43 @@ function scoreVehicle(vehicle: Vehicle, data: OnboardingData): {
 
 export async function POST(request: Request) {
   try {
-    const data: OnboardingData = await request.json();
+    const raw = await request.json();
+    // Basic shape validation and safe defaults
+    const data: OnboardingData = {
+      name: raw?.name,
+      age: Number(raw?.age),
+      monthlyIncome: Number(raw?.monthlyIncome),
+      spouseIncome: raw?.spouseIncome ? Number(raw?.spouseIncome) : undefined,
+      creditScore: raw?.creditScore,
+      assets: raw?.assets ? Number(raw?.assets) : undefined,
+      dailyMiles: Number(raw?.dailyMiles),
+      financePath: raw?.financePath,
+      preferences: {
+        mode: raw?.preferences?.mode ?? "recommend",
+        carType: raw?.preferences?.carType,
+        budget: raw?.preferences?.budget ? Number(raw?.preferences?.budget) : undefined,
+        downPayment: raw?.preferences?.downPayment ? Number(raw?.preferences?.downPayment) : undefined,
+        fuelPreference: raw?.preferences?.fuelPreference ?? "any",
+        ownershipYears: raw?.preferences?.ownershipYears ? Number(raw?.preferences?.ownershipYears) : undefined,
+        region: raw?.preferences?.region,
+        usage: raw?.preferences?.usage,
+        riskTolerance: raw?.preferences?.riskTolerance,
+      },
+    } as OnboardingData;
+
+    // Required fields guard
+    const missing: string[] = [];
+    if (!data.age && data.age !== 0) missing.push("age");
+    if (!data.monthlyIncome && data.monthlyIncome !== 0) missing.push("monthlyIncome");
+    if (!data.creditScore) missing.push("creditScore");
+    if (!data.dailyMiles && data.dailyMiles !== 0) missing.push("dailyMiles");
+    if (!data.preferences) missing.push("preferences");
+    if (missing.length) {
+      return NextResponse.json(
+        { ok: false, error: `Missing required fields: ${missing.join(", ")}` },
+        { status: 400 }
+      );
+    }
     
     // Check eligibility first
     const eligibility = checkEligibility(data);
@@ -325,17 +361,17 @@ export async function POST(request: Request) {
     // Filter inventory based on higher-level preferences
     let pool = inventory.slice();
     
-    // Fuel preference filter
-    if (data.preferences.fuelPreference && data.preferences.fuelPreference !== "any") {
+    // Fuel preference filter (safe)
+    if (data.preferences?.fuelPreference && data.preferences.fuelPreference !== "any") {
       const fuelPref = data.preferences.fuelPreference === "gas" ? "gasoline" : data.preferences.fuelPreference;
       pool = pool.filter((v) => v.fuelType === fuelPref);
     }
     
     // Usage-based filters
-    if (data.preferences.usage === "haul") {
+    if (data.preferences?.usage === "haul") {
       pool = pool.filter((v) => v.bodyType === "truck" || v.horsepower >= 250);
     }
-    if (data.preferences.usage === "family") {
+    if (data.preferences?.usage === "family") {
       pool = pool.filter((v) => v.bodyType === "suv" || v.seats >= 5);
     }
 
@@ -348,60 +384,21 @@ export async function POST(request: Request) {
       };
     });
     
-    // Sort by score descending
-    const sortedByScore = scored.sort((a, b) => b.score - a.score);
-    
-    // Select top 5 with diversity - avoid multiple trims of same model
-    const recommendations: typeof sortedByScore = [];
-    const usedModels = new Set<string>();
-    
-    for (const item of sortedByScore) {
-      const modelKey = item.vehicle.model;
-      
-      // Always take the top scorer
-      if (recommendations.length === 0) {
-        recommendations.push(item);
-        usedModels.add(modelKey);
-        continue;
-      }
-      
-      // Prefer different models for diversity
-      if (!usedModels.has(modelKey)) {
-        recommendations.push(item);
-        usedModels.add(modelKey);
-      } else if (recommendations.length < 5) {
-        // If we need more cars and this is just a different trim, include it
-        // but only if we don't have 5 diverse models yet
-        const sameModelCount = recommendations.filter(r => r.vehicle.model === modelKey).length;
-        if (sameModelCount < 2) { // Max 2 trims per model
-          recommendations.push(item);
-        }
-      }
-      
-      if (recommendations.length >= 5) break;
-    }
-    
-    // If we still don't have 5, fill with remaining vehicles
-    if (recommendations.length < 5) {
-      for (const item of sortedByScore) {
-        if (!recommendations.includes(item)) {
-          recommendations.push(item);
-          if (recommendations.length >= 5) break;
-        }
-      }
-    }
-    
-    const finalRecommendations = recommendations.map((item, index) => ({
-      rank: index + 1,
-      vehicle: item.vehicle,
-      monthlyPayment: item.monthlyPayment,
-      reasons: item.reasons,
-      score: Math.round(item.score),
-      costAnalysis: item.costAnalysis
-    }));
+    // Sort by score descending and take top 5
+    const recommendations = scored
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5)
+      .map((item, index) => ({
+        rank: index + 1,
+        vehicle: item.vehicle,
+        monthlyPayment: item.monthlyPayment,
+        reasons: item.reasons,
+        score: Math.round(item.score),
+        costAnalysis: item.costAnalysis
+      }));
     
     // Calculate average of other cars for comparison
-    const otherCars = sortedByScore.slice(recommendations.length);
+    const otherCars = scored.slice(5);
     const avgOtherCost = otherCars.length > 0 
       ? otherCars.reduce((sum, car) => sum + car.costAnalysis.netCost, 0) / otherCars.length
       : null;
@@ -409,14 +406,14 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       eligible: true,
-      recommendations: finalRecommendations,
+      recommendations,
       maxMonthlyPayment: Math.round(calculateMaxMonthlyPayment(data)),
       averageCompetitorCost: avgOtherCost ? Math.round(avgOtherCost) : null
     });
   } catch (e) {
     const error = e as Error;
     return NextResponse.json(
-      { ok: false, error: error?.message ?? "Invalid request" },
+      { ok: false, error: `Invalid request: ${error?.message ?? "unknown"}` },
       { status: 400 }
     );
   }
