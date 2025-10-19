@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@/lib/store";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import axios from "axios";
 import { CelestialBackground } from "@/components/celestial/celestial-background";
 import { PageHeader } from "@/components/layout/page-header";
@@ -86,7 +86,6 @@ type VehicleInsights = {
 
 export default function InsightsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const lastSubmitted = useAppSelector((state) => state.onboarding.lastSubmitted);
   
   const [loading, setLoading] = useState(true);

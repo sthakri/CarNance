@@ -78,7 +78,8 @@ export default function OnboardingFormPage() {
       }
     } catch (e: any) {
       dispatch(setStatus("error"));
-      const msg = e?.message ?? "Failed to submit";
+      const serverMsg = e?.response?.data?.error as string | undefined;
+      const msg = serverMsg || e?.message || "Failed to submit";
       dispatch(setError(msg));
       toast.error("Submission failed", { description: msg });
     }

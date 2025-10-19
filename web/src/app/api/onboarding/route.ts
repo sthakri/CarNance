@@ -2,36 +2,42 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
+// In-memory fallback storage for environments where the filesystem is read-only (e.g., Vercel)
+// This is ephemeral and per-instance, but sufficient for demos/tests.
+const memStore: Array<{ id: string; timestamp: string; data: any }> = [];
+
 export async function POST(request: Request) {
   try {
     const data = await request.json();
     const id = Math.random().toString(36).slice(2);
     const timestamp = new Date().toISOString();
     
-    // Save to a simple JSON file
+    // Attempt to persist to filesystem, fallback to in-memory if write fails
     const filePath = path.join(process.cwd(), "submissions.json");
-    let submissions: any[] = [];
-    
-    // Read existing submissions if file exists
-    if (fs.existsSync(filePath)) {
-      try {
-        const fileContent = fs.readFileSync(filePath, "utf-8");
-        if (fileContent && fileContent.trim().length > 0) {
-          const parsed = JSON.parse(fileContent);
-          submissions = Array.isArray(parsed) ? parsed : [];
+    try {
+      let submissions: any[] = [];
+      if (fs.existsSync(filePath)) {
+        try {
+          const fileContent = fs.readFileSync(filePath, "utf-8");
+          if (fileContent && fileContent.trim().length > 0) {
+            const parsed = JSON.parse(fileContent);
+            submissions = Array.isArray(parsed) ? parsed : [];
+          }
+        } catch {
+          submissions = [];
         }
-      } catch {
-        // If file is empty or corrupted, reset to empty array
-        submissions = [];
       }
+
+      submissions.push({ id, timestamp, data });
+      fs.writeFileSync(filePath, JSON.stringify(submissions, null, 2));
+    } catch {
+      // Filesystem not writable; store in memory as a fallback
+      memStore.push({ id, timestamp, data });
     }
-    
-    // Add new submission
-    submissions.push({ id, timestamp, data });
-    
-    // Write back to file
-    fs.writeFileSync(filePath, JSON.stringify(submissions, null, 2));
-    
+
     return NextResponse.json({ ok: true, id, data }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message ?? "Invalid JSON" }, { status: 400 });
@@ -46,20 +52,20 @@ export async function GET(request: Request) {
 
     const filePath = path.join(process.cwd(), "submissions.json");
 
-    if (!fs.existsSync(filePath)) {
-      // If no file yet, return empty list
-      return NextResponse.json({ ok: true, submissions: [] }, { status: 200 });
-    }
-
-    const fileContent = fs.readFileSync(filePath, "utf-8");
-    let submissions: Array<{ id: string; timestamp: string; data: unknown }> = [];
-    try {
-      if (fileContent && fileContent.trim().length > 0) {
-        const parsed = JSON.parse(fileContent);
-        submissions = Array.isArray(parsed) ? parsed : [];
+    let submissions: Array<{ id: string; timestamp: string; data: any }> = [];
+    if (fs.existsSync(filePath)) {
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf-8");
+        if (fileContent && fileContent.trim().length > 0) {
+          const parsed = JSON.parse(fileContent);
+          submissions = Array.isArray(parsed) ? parsed : [];
+        }
+      } catch {
+        submissions = [];
       }
-    } catch {
-      submissions = [];
+    } else {
+      // Fall back to in-memory if file doesn't exist
+      submissions = [...memStore];
     }
 
     if (id) {
@@ -88,6 +94,7 @@ export async function PUT(request: Request) {
     const filePath = path.join(process.cwd(), "submissions.json");
 
     let submissions: Array<{ id: string; timestamp: string; data: any }> = [];
+    let usingMemory = false;
     if (fs.existsSync(filePath)) {
       try {
         const fileContent = fs.readFileSync(filePath, "utf-8");
@@ -98,6 +105,9 @@ export async function PUT(request: Request) {
       } catch {
         submissions = [];
       }
+    } else {
+      submissions = [...memStore];
+      usingMemory = true;
     }
 
     if (submissions.length === 0) {
@@ -107,13 +117,23 @@ export async function PUT(request: Request) {
     // Merge into latest submission's data
     const latestIdx = submissions.length - 1;
     const latest = submissions[latestIdx];
-    submissions[latestIdx] = {
+    const updated = {
       ...latest,
       data: { ...(latest?.data || {}), ...update },
     };
+    submissions[latestIdx] = updated;
 
-    fs.writeFileSync(filePath, JSON.stringify(submissions, null, 2));
-    return NextResponse.json({ ok: true, submission: submissions[latestIdx] }, { status: 200 });
+    try {
+      if (!usingMemory) {
+        fs.writeFileSync(filePath, JSON.stringify(submissions, null, 2));
+      } else {
+        memStore.splice(0, memStore.length, ...submissions);
+      }
+    } catch {
+      // If write fails, update in-memory as a fallback
+      memStore.splice(0, memStore.length, ...submissions);
+    }
+    return NextResponse.json({ ok: true, submission: updated }, { status: 200 });
   } catch (e: any) {
     return NextResponse.json({ ok: false, error: e?.message ?? "Failed to update" }, { status: 400 });
   }

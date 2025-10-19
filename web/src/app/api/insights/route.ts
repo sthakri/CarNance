@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import inventory from "@/data/toyota-inventory.json";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 type Vehicle = typeof inventory[0];
 
 type OnboardingData = {
