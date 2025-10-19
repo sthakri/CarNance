@@ -1,6 +1,5 @@
 import { CarModel } from '../../types/domain';
-import fs from 'fs';
-import path from 'path';
+import localModels from '../../../data/toyota_models.json';
 
 type NhtsaModelsResponse = {
   Results: Array<{ Model_Name: string }>
@@ -119,9 +118,7 @@ export async function fetchVehicleModels(year = 2024, make = 'Toyota'): Promise<
 
   // Merge with local dataset to fill missing msrp/apr/residual/size defaults
   function loadLocalDatasetDirect(): CarModel[] {
-    const file = path.resolve(__dirname, '../../../data/toyota_models.json');
-    const content = fs.readFileSync(file, 'utf-8');
-    return JSON.parse(content) as CarModel[];
+    return localModels as CarModel[];
   }
   const local = loadLocalDatasetDirect();
   const merged: CarModel[] = mapped.map(apiModel => {
