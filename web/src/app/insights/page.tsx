@@ -157,6 +157,7 @@ export default function InsightsPage() {
       </main>
     );
   }
+// 
 
   if (error || insights.length === 0) {
     return (
