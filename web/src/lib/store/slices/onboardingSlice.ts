@@ -8,7 +8,7 @@ export type OnboardingValues = {
   creditScore: "300-579" | "580-669" | "670-739" | "740-799" | "800-850";
   assets?: number;
   dailyMiles: number;
-  financePath: "lease" | "buy" | "credit-build";
+  financePath?: "lease" | "buy";
   preferences: {
     mode: "recommend" | "choose";
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";

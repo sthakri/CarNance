@@ -227,8 +227,11 @@ export default function ResultsPage() {
                 </div>
 
                 <div className="pt-2">
-                  <Button className="w-full bg-indigo-600 hover:bg-indigo-500">
-                    Learn More
+                  <Button
+                    className="w-full bg-indigo-600 hover:bg-indigo-500"
+                    onClick={() => router.push(`/insights/${rec.vehicle.id}`)}
+                  >
+                    View Insights
                   </Button>
                 </div>
               </CardContent>

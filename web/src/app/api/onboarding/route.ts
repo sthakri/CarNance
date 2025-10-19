@@ -80,3 +80,41 @@ export async function GET(request: Request) {
     return NextResponse.json({ ok: false, error: e?.message ?? "Failed to read submissions" }, { status: 500 });
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const update = (body?.data ?? {}) as Record<string, unknown>;
+    const filePath = path.join(process.cwd(), "submissions.json");
+
+    let submissions: Array<{ id: string; timestamp: string; data: any }> = [];
+    if (fs.existsSync(filePath)) {
+      try {
+        const fileContent = fs.readFileSync(filePath, "utf-8");
+        if (fileContent && fileContent.trim().length > 0) {
+          const parsed = JSON.parse(fileContent);
+          submissions = Array.isArray(parsed) ? parsed : [];
+        }
+      } catch {
+        submissions = [];
+      }
+    }
+
+    if (submissions.length === 0) {
+      return NextResponse.json({ ok: false, error: "No submissions to update" }, { status: 404 });
+    }
+
+    // Merge into latest submission's data
+    const latestIdx = submissions.length - 1;
+    const latest = submissions[latestIdx];
+    submissions[latestIdx] = {
+      ...latest,
+      data: { ...(latest?.data || {}), ...update },
+    };
+
+    fs.writeFileSync(filePath, JSON.stringify(submissions, null, 2));
+    return NextResponse.json({ ok: true, submission: submissions[latestIdx] }, { status: 200 });
+  } catch (e: any) {
+    return NextResponse.json({ ok: false, error: e?.message ?? "Failed to update" }, { status: 400 });
+  }
+}

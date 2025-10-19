@@ -11,7 +11,7 @@ type OnboardingData = {
   creditScore: "300-579" | "580-669" | "670-739" | "740-799" | "800-850";
   assets?: number;
   dailyMiles: number;
-  financePath: "lease" | "buy" | "credit-build";
+  financePath?: "lease" | "buy";
   preferences: {
     mode: "recommend" | "choose";
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";
@@ -23,7 +23,7 @@ type OnboardingData = {
 type VehicleInsights = {
   vehicleId: string;
   vehicleName: string;
-  financePath: "lease" | "buy" | "credit-build";
+  financePath: "lease" | "buy";
   fiveYearProjection: {
     totalCost: number;
     monthlyBreakdown: {
@@ -183,10 +183,7 @@ function predictCreditImpact(
     explanation = "This payment stretches your budget. While it can still build credit, there's higher risk of missed payments.";
   }
   
-  // Credit-build path bonus
-  if (data.financePath === "credit-build") {
-    scoreDelta += 10;
-  }
+  // No special-case path bonus; paths limited to lease/buy
   
   // Cap scores at 850
   const projectedScore12Mo = Math.min(850, currentScore + Math.round(scoreDelta * 0.4));
@@ -269,17 +266,16 @@ function generateRecommendation(
   }
   
   // Finance path alignment
-  if (data.financePath === "lease" && vehicle.year >= 2024) {
+  if ((data.financePath ?? "buy") === "lease" && vehicle.year >= 2024) {
     pros.push("Great lease option (new model)");
-  } else if (data.financePath === "buy" && vehicle.fuelType === "hybrid") {
+  } else if ((data.financePath ?? "buy") === "buy" && vehicle.fuelType === "hybrid") {
     pros.push("Strong resale value");
-  } else if (data.financePath === "credit-build" && projection.monthlyBreakdown.payment < 400) {
-    pros.push("Perfect for credit building");
   }
   
   let reason = "";
   if (isTopChoice) {
-    reason = `Best overall match for your ${data.financePath} path with strong ${
+    const path = data.financePath ?? "buy";
+    reason = `Best overall match for your ${path} path with strong ${
       creditImpact.impactLevel === "excellent" ? "credit building" : "financial"
     } benefits.`;
   } else {
@@ -307,7 +303,7 @@ export async function POST(request: Request) {
       const projection = calculateFiveYearProjection(vehicle, userData, rec.monthlyPayment);
       return {
         vehicleId: vehicle.id,
-        vehicleName: `${vehicle.year} ${vehicle.model}`,
+          vehicleName: `${vehicle.year} ${vehicle.model}`,
         totalCost: projection.totalCost,
       };
     });
@@ -329,7 +325,7 @@ export async function POST(request: Request) {
       return {
         vehicleId: vehicle.id,
         vehicleName: `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-        financePath: userData.financePath,
+        financePath: (userData.financePath ?? "buy"),
         fiveYearProjection: projection,
         creditImpact,
         savingsAnalysis,
