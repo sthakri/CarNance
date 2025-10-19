@@ -14,6 +14,12 @@ export type OnboardingValues = {
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";
     budget?: number;
     downPayment?: number;
+    // New high-level inputs
+    fuelPreference?: "any" | "gas" | "hybrid" | "electric";
+    ownershipYears?: number; // intended years to keep the car
+    region?: string; // used for fuel price approximations
+    usage?: "commute" | "family" | "haul" | "mixed";
+    riskTolerance?: "low" | "medium" | "high";
   };
 };
 

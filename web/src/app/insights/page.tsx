@@ -20,6 +20,12 @@ import {
   CheckCircle2,
   XCircle,
   AlertCircle,
+  Sparkles,
+  Calendar,
+  Target,
+  Leaf,
+  ShieldCheck,
+  MapPin,
 } from "lucide-react";
 
 type VehicleInsights = {
@@ -66,6 +72,15 @@ type VehicleInsights = {
     reason: string;
     pros: string[];
     cons: string[];
+  };
+  lifestyleInsights?: {
+    totalCostOfOwnership: number;
+    yearlyBreakdown: number;
+    ownershipAlignment: string;
+    usageOptimization: string;
+    environmentalImpact: string;
+    riskAssessment: string;
+    regionalConsiderations?: string;
   };
 };
 
@@ -360,6 +375,79 @@ export default function InsightsPage() {
                   </div>
                 )}
               </div>
+
+              {/* High-Level Lifestyle Insights */}
+              {insight.lifestyleInsights && (
+                <div>
+                  <Separator className="my-6 bg-white/10" />
+                  <h3 className="mb-4 flex items-center gap-2 text-xl font-semibold text-indigo-300">
+                    <Sparkles className="size-6" />
+                    Your Personalized Insights
+                  </h3>
+
+                  <div className="space-y-4">
+                    {/* Ownership Alignment */}
+                    <div className="rounded-lg bg-gradient-to-r from-indigo-500/10 to-purple-500/10 p-4 ring-1 ring-white/10">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Calendar className="size-5 text-indigo-400" />
+                        <h4 className="font-semibold">Ownership Timeline</h4>
+                      </div>
+                      <p className="text-sm text-white/80">
+                        {insight.lifestyleInsights.ownershipAlignment}
+                      </p>
+                      <p className="mt-2 text-xs text-white/60">
+                        Total cost over intended ownership: <strong>${insight.lifestyleInsights.totalCostOfOwnership.toLocaleString()}</strong> (${insight.lifestyleInsights.yearlyBreakdown.toLocaleString()}/year avg)
+                      </p>
+                    </div>
+
+                    {/* Usage Optimization */}
+                    <div className="rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 p-4 ring-1 ring-white/10">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Target className="size-5 text-blue-400" />
+                        <h4 className="font-semibold">Usage Match</h4>
+                      </div>
+                      <p className="text-sm text-white/80">
+                        {insight.lifestyleInsights.usageOptimization}
+                      </p>
+                    </div>
+
+                    {/* Environmental Impact */}
+                    <div className="rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 p-4 ring-1 ring-white/10">
+                      <div className="mb-2 flex items-center gap-2">
+                        <Leaf className="size-5 text-green-400" />
+                        <h4 className="font-semibold">Environmental Impact</h4>
+                      </div>
+                      <p className="text-sm text-white/80">
+                        {insight.lifestyleInsights.environmentalImpact}
+                      </p>
+                    </div>
+
+                    {/* Risk Assessment */}
+                    <div className="rounded-lg bg-gradient-to-r from-orange-500/10 to-amber-500/10 p-4 ring-1 ring-white/10">
+                      <div className="mb-2 flex items-center gap-2">
+                        <ShieldCheck className="size-5 text-orange-400" />
+                        <h4 className="font-semibold">Financial Risk Profile</h4>
+                      </div>
+                      <p className="text-sm text-white/80">
+                        {insight.lifestyleInsights.riskAssessment}
+                      </p>
+                    </div>
+
+                    {/* Regional Considerations */}
+                    {insight.lifestyleInsights.regionalConsiderations && (
+                      <div className="rounded-lg bg-gradient-to-r from-pink-500/10 to-rose-500/10 p-4 ring-1 ring-white/10">
+                        <div className="mb-2 flex items-center gap-2">
+                          <MapPin className="size-5 text-pink-400" />
+                          <h4 className="font-semibold">Regional Factors</h4>
+                        </div>
+                        <p className="text-sm text-white/80">
+                          {insight.lifestyleInsights.regionalConsiderations}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))}

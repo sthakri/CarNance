@@ -28,6 +28,12 @@ type FormValues = {
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";
     budget?: number;
     downPayment?: number;
+    // New high-level inputs
+    fuelPreference?: "any" | "gas" | "hybrid" | "electric";
+    ownershipYears?: number;
+    region?: string;
+    usage?: "commute" | "family" | "haul" | "mixed";
+    riskTolerance?: "low" | "medium" | "high";
   };
 };
 
@@ -86,7 +92,7 @@ export default function OnboardingFormPage() {
       <section className="relative z-10 space-y-8">
         <PageHeader
           title="Tell us about you"
-          subtitle="We’ll chart your financing constellation"
+          subtitle="We'll chart your financing constellation"
         />
 
         <Card className="border-white/10 bg-white/5 text-white backdrop-blur">
@@ -100,7 +106,7 @@ export default function OnboardingFormPage() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-sm font-medium">Full name</label>
-                  <Input placeholder="Jane Doe" {...register("name", { required: "Please enter your full name", minLength: { value: 2, message: "Name must be at least 2 characters" } })}/> 
+                  <Input placeholder="Your Name" {...register("name", { required: "Please enter your full name", minLength: { value: 2, message: "Name must be at least 2 characters" } })}/> 
                   {errors.name && (
                     <p className="mt-1 text-xs text-red-300">{errors.name.message as string}</p>
                   )}
@@ -175,7 +181,7 @@ export default function OnboardingFormPage() {
                 </div>
               </div>
 
-              <Separator className="bg-white/10" />
+              <Separator />
 
               
 
@@ -253,6 +259,88 @@ export default function OnboardingFormPage() {
                   </div>
                 </div>
               )}
+
+              {/* New high-level inputs */}
+              <Separator className="bg-white/10" />
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Fuel preference</label>
+                  <Controller
+                    control={control}
+                    name="preferences.fuelPreference"
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any</SelectItem>
+                          <SelectItem value="gas">Gas</SelectItem>
+                          <SelectItem value="hybrid">Hybrid</SelectItem>
+                          <SelectItem value="electric">Electric</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Intended ownership (years)</label>
+                  <Input type="number" min={1} max={15} {...register("preferences.ownershipYears", { valueAsNumber: true })} />
+                </div>
+
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Primary usage</label>
+                  <Controller
+                    control={control}
+                    name="preferences.usage"
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="commute">Commute</SelectItem>
+                          <SelectItem value="family">Family</SelectItem>
+                          <SelectItem value="haul">Haul/Work</SelectItem>
+                          <SelectItem value="mixed">Mixed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3 mt-4">
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Region (for fuel pricing)</label>
+                  <Input placeholder="e.g., CA, TX" {...register("preferences.region")} />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Risk tolerance</label>
+                  <Controller
+                    control={control}
+                    name="preferences.riskTolerance"
+                    render={({ field }) => (
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Medium" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="low">Low</SelectItem>
+                          <SelectItem value="medium">Medium</SelectItem>
+                          <SelectItem value="high">High</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+                <div>
+                  <label className="mb-1 block text-sm font-medium">Estimated down payment (%)</label>
+                  <Input type="number" min={0} max={100} {...register("preferences.downPayment", { valueAsNumber: true })} />
+                </div>
+              </div>
 
               <div className="flex items-center justify-end">
                 <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500">

@@ -20,6 +20,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
+import LineChart from "@/components/charts/LineChart";
 
 type VehicleInsights = {
   vehicleId: string;
@@ -225,6 +226,35 @@ export default function SingleInsightsPage({ params }: { params: { id: string } 
                     <p className="font-bold text-indigo-300">${insight.fiveYearProjection.monthlyBreakdown.total}/mo</p>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Graphs */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="rounded-lg bg-white/5 p-4">
+                <h4 className="mb-2 text-sm font-semibold text-white/70">Monthly Cost Projection (60 months)</h4>
+                <LineChart
+                  data={Array.from({ length: 60 }).map((_, i) => {
+                    // approximate monthly total slowly varying (simulate small inflation, decreasing principal)
+                    const base = insight.fiveYearProjection.monthlyBreakdown.total;
+                    const decay = Math.max(0.85, 1 - (i / 60) * 0.15);
+                    const inflation = 1 + (i / 60) * 0.12;
+                    return Math.round(base * decay * inflation);
+                  })}
+                />
+              </div>
+
+              <div className="rounded-lg bg-white/5 p-4">
+                <h4 className="mb-2 text-sm font-semibold text-white/70">Credit Score Projection</h4>
+                <LineChart
+                  data={Array.from({ length: 60 }).map((_, i) => {
+                    const start = parseInt(insight.creditImpact.currentScore.split("-")[0]) + 0;
+                    const delta = insight.creditImpact.projectedScoreAfter60Months - start;
+                    const val = Math.round(start + (delta * (i / 59)));
+                    return val;
+                  })}
+                  color="#10b981"
+                />
               </div>
             </div>
 

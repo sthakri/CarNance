@@ -1,104 +1,179 @@
 [
   {
-    "id": "cz4xon7y38",
-    "timestamp": "2025-10-18T23:06:25.357Z",
+    "id": "pmf36pjmnbe",
+    "timestamp": "2025-10-19T05:52:32.966Z",
     "data": {
-      "name": "Anup Basent ",
+      "name": "ANup",
       "age": 25,
       "monthlyIncome": 5000,
       "spouseIncome": null,
       "creditScore": "670-739",
-      "assets": 20000,
-      "dailyMiles": 25,
-      "financePath": "buy",
-      "preferences": {
-        "mode": "recommend"
-      }
-    }
-  },
-  {
-    "id": "3xq712m4co3",
-    "timestamp": "2025-10-18T23:40:48.939Z",
-    "data": {
-      "name": "Abhinesh Dahal",
-      "age": 25,
-      "monthlyIncome": 5000,
-      "spouseIncome": null,
-      "creditScore": "670-739",
-      "assets": null,
-      "dailyMiles": 25,
-      "financePath": "lease",
-      "preferences": {
-        "mode": "recommend"
-      }
-    }
-  },
-  {
-    "id": "z6rs0e4fvmh",
-    "timestamp": "2025-10-19T00:15:19.336Z",
-    "data": {
-      "name": "Jane doe",
-      "age": 25,
-      "monthlyIncome": 5000,
-      "spouseIncome": null,
-      "creditScore": "670-739",
-      "assets": null,
+      "assets": 2000,
       "dailyMiles": 25,
       "preferences": {
-        "mode": "recommend"
-      },
-      "financePath": "lease"
-    }
-  },
-  {
-    "id": "5p5pu8g8079",
-    "timestamp": "2025-10-19T00:16:46.915Z",
-    "data": {
-      "name": "Test ",
-      "age": 25,
-      "monthlyIncome": 5000,
-      "spouseIncome": 10000,
-      "creditScore": "670-739",
-      "assets": 1000000,
-      "dailyMiles": 25,
-      "preferences": {
-        "mode": "recommend"
+        "mode": "recommend",
+        "ownershipYears": 5,
+        "region": "TX",
+        "downPayment": 10,
+        "fuelPreference": "gas",
+        "usage": "haul",
+        "riskTolerance": "medium"
       },
       "financePath": "buy"
     }
   },
   {
-    "id": "w7u0zt587ac",
-    "timestamp": "2025-10-19T00:22:53.876Z",
+    "id": "3kyszhuie7f",
+    "timestamp": "2025-10-19T06:52:50.259Z",
     "data": {
-      "name": "Jane doe ",
+      "name": "Abhinesh Dahal ",
       "age": 25,
       "monthlyIncome": 5000,
       "spouseIncome": null,
       "creditScore": "670-739",
-      "assets": null,
+      "assets": 60000,
       "dailyMiles": 25,
       "preferences": {
-        "mode": "recommend"
+        "mode": "recommend",
+        "ownershipYears": null,
+        "region": "",
+        "downPayment": null
+      },
+      "financePath": "buy"
+    }
+  },
+  {
+    "id": "kjxnczdxmtp",
+    "timestamp": "2025-10-19T07:00:04.608Z",
+    "data": {
+      "name": "RedBull ",
+      "age": 25,
+      "monthlyIncome": 600,
+      "spouseIncome": null,
+      "creditScore": "670-739",
+      "assets": 7000,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend",
+        "ownershipYears": null,
+        "region": "",
+        "downPayment": null
       },
       "financePath": "lease"
     }
   },
   {
-    "id": "eco6z8yexds",
-    "timestamp": "2025-10-19T00:23:24.924Z",
+    "id": "5xlpfhhtdyh",
+    "timestamp": "2025-10-19T07:10:14.162Z",
     "data": {
-      "name": "Jane doe ",
+      "name": "Chi",
       "age": 25,
       "monthlyIncome": 5000,
-      "spouseIncome": null,
+      "spouseIncome": 80000,
+      "creditScore": "670-739",
+      "assets": 80000,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend",
+        "ownershipYears": 5,
+        "region": "TX",
+        "downPayment": 20,
+        "fuelPreference": "hybrid",
+        "usage": "family",
+        "riskTolerance": "medium"
+      },
+      "financePath": "lease"
+    }
+  },
+  {
+    "id": "yavaovw9y1",
+    "timestamp": "2025-10-19T07:16:29.962Z",
+    "data": {
+      "name": "Anup ",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": 300,
+      "creditScore": "670-739",
+      "assets": 1500,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend",
+        "ownershipYears": 5,
+        "region": "TX",
+        "downPayment": 15,
+        "fuelPreference": "gas",
+        "usage": "haul"
+      },
+      "financePath": "lease"
+    }
+  },
+  {
+    "id": "y3ba36ekrl",
+    "timestamp": "2025-10-19T07:19:35.134Z",
+    "data": {
+      "name": "Test",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": 7000,
+      "creditScore": "670-739",
+      "assets": 2000,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend",
+        "ownershipYears": 5,
+        "region": "TX",
+        "downPayment": 5,
+        "fuelPreference": "gas",
+        "usage": "family",
+        "riskTolerance": "high"
+      },
+      "financePath": "lease"
+    }
+  },
+  {
+    "id": "eji07z15hni",
+    "timestamp": "2025-10-19T07:21:52.865Z",
+    "data": {
+      "name": "Anup ",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": 1000,
+      "creditScore": "670-739",
+      "assets": 7000,
+      "dailyMiles": 25,
+      "preferences": {
+        "mode": "recommend",
+        "ownershipYears": 5,
+        "region": "",
+        "downPayment": 30,
+        "fuelPreference": "gas",
+        "usage": "family",
+        "riskTolerance": "medium"
+      },
+      "financePath": "buy"
+    }
+  },
+  {
+    "id": "u8iwhflf2wj",
+    "timestamp": "2025-10-19T07:24:24.885Z",
+    "data": {
+      "name": "An",
+      "age": 25,
+      "monthlyIncome": 5000,
+      "spouseIncome": 7000,
       "creditScore": "670-739",
       "assets": null,
       "dailyMiles": 25,
       "preferences": {
-        "mode": "recommend"
+        "mode": "recommend",
+        "ownershipYears": 5,
+        "region": "TX",
+        "downPayment": 20,
+        "fuelPreference": "gas",
+        "usage": "family",
+        "riskTolerance": "medium"
       },
-      "financePath": "buy"
+      "financePath": "lease"
     }
   }
 ]

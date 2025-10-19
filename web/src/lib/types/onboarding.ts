@@ -23,8 +23,15 @@ export interface CarPreferences {
   carType?: CarType;
   budget?: number;
   downPayment?: number;
+  // High-level insights fields
+  fuelPreference?: "any" | "gas" | "hybrid" | "electric";
+  ownershipYears?: number;
+  region?: string;
+  usage?: "commute" | "family" | "haul" | "mixed";
+  riskTolerance?: "low" | "medium" | "high";
 }
 
 export interface OnboardingFormValues extends PersonalInfo, FinancialInfo, DrivingInfo {
   preferences: CarPreferences;
+  financePath?: "lease" | "buy";
 }

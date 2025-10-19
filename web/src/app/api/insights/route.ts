@@ -17,6 +17,11 @@ type OnboardingData = {
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";
     budget?: number;
     downPayment?: number;
+    fuelPreference?: "any" | "gas" | "hybrid" | "electric";
+    ownershipYears?: number;
+    region?: string;
+    usage?: "commute" | "family" | "haul" | "mixed";
+    riskTolerance?: "low" | "medium" | "high";
   };
 };
 
@@ -64,6 +69,15 @@ type VehicleInsights = {
     reason: string;
     pros: string[];
     cons: string[];
+  };
+  lifestyleInsights?: {
+    totalCostOfOwnership: number;
+    yearlyBreakdown: number;
+    ownershipAlignment: string;
+    usageOptimization: string;
+    environmentalImpact: string;
+    riskAssessment: string;
+    regionalConsiderations?: string;
   };
 };
 
@@ -228,6 +242,124 @@ function calculateSavingsAnalysis(
   };
 }
 
+// Generate high-level lifestyle insights
+function generateLifestyleInsights(
+  vehicle: Vehicle,
+  data: OnboardingData,
+  projection: VehicleInsights["fiveYearProjection"]
+): VehicleInsights["lifestyleInsights"] {
+  const ownershipYears = data.preferences.ownershipYears || 5;
+  const usage = data.preferences.usage || "mixed";
+  const riskTolerance = data.preferences.riskTolerance || "medium";
+  const region = data.preferences.region;
+  const fuelPreference = data.preferences.fuelPreference || "any";
+  
+  // Calculate total cost over intended ownership period
+  const yearlyAvgCost = projection.totalCost / 5;
+  const totalCostOfOwnership = Math.round(yearlyAvgCost * ownershipYears);
+  
+  // Ownership alignment analysis
+  let ownershipAlignment = "";
+  if (ownershipYears <= 3 && data.financePath === "lease") {
+    ownershipAlignment = "Perfect fit! Leasing for short-term ownership minimizes your commitment and keeps you in newer vehicles with warranty coverage.";
+  } else if (ownershipYears <= 3 && data.financePath === "buy") {
+    ownershipAlignment = "Consider leasing instead. With a 3-year ownership plan, leasing may offer better value and flexibility without the depreciation hit.";
+  } else if (ownershipYears >= 7) {
+    ownershipAlignment = `Excellent long-term choice! Owning for ${ownershipYears}+ years maximizes value. After loan payoff, you'll enjoy payment-free years while the vehicle maintains utility.`;
+  } else {
+    ownershipAlignment = `Good balance for ${ownershipYears} years. You'll pay off the vehicle and enjoy it with minimal depreciation concerns.`;
+  }
+  
+  // Usage optimization
+  let usageOptimization = "";
+  const annualMiles = data.dailyMiles * 365;
+  if (usage === "commute" && annualMiles > 15000) {
+    if (vehicle.fuelType === "electric" || vehicle.fuelType === "hybrid") {
+      usageOptimization = "Excellent commuter choice! High mileage makes fuel-efficient technology a smart investment. Your savings on gas will offset any premium.";
+    } else {
+      usageOptimization = `With ${Math.round(annualMiles).toLocaleString()} annual miles, fuel costs will be significant. Consider a hybrid or EV to save $${Math.round((annualMiles / 25 - annualMiles / 50) * 3.5).toLocaleString()}/year.`;
+    }
+  } else if (usage === "family") {
+    const bodyTypeLower = vehicle.bodyType.toLowerCase();
+    usageOptimization = bodyTypeLower.includes("suv") || bodyTypeLower.includes("sedan") 
+      ? "Great family vehicle with space, safety, and reliability for your needs."
+      : "For family use, consider an SUV or sedan for better passenger comfort and safety features.";
+  } else if (usage === "haul") {
+    const bodyTypeLower = vehicle.bodyType.toLowerCase();
+    usageOptimization = bodyTypeLower.includes("truck") || bodyTypeLower.includes("suv")
+      ? "Perfect for hauling and work needs. Rugged and capable for your lifestyle."
+      : "For work/hauling, a truck or larger SUV may serve you better with towing capacity and cargo space.";
+  } else {
+    usageOptimization = `Versatile choice for mixed usage. With ${Math.round(annualMiles).toLocaleString()} miles/year, you'll balance efficiency and capability.`;
+  }
+  
+  // Environmental impact
+  let environmentalImpact = "";
+  const co2PerYear = vehicle.fuelType === "electric" ? 0 : (annualMiles / vehicle.mpgCombined) * 8.887; // kg CO2 per gallon
+  if (vehicle.fuelType === "electric") {
+    environmentalImpact = "Zero emissions! You'll eliminate ~" + Math.round((annualMiles / 25) * 8.887 / 1000) + " tons of CO2/year compared to a gas vehicle, contributing to a cleaner environment.";
+  } else if (vehicle.fuelType === "hybrid") {
+    environmentalImpact = `Lower emissions with hybrid technology. You'll reduce CO2 output by ~${Math.round(((annualMiles / 25) - (annualMiles / vehicle.mpgCombined)) * 8.887 / 1000)} tons/year vs. conventional gas vehicles.`;
+  } else if (vehicle.mpgCombined >= 30) {
+    environmentalImpact = `Good fuel economy means reasonable environmental impact: ~${Math.round(co2PerYear / 1000)} tons CO2/year.`;
+  } else {
+    environmentalImpact = `Higher emissions: ~${Math.round(co2PerYear / 1000)} tons CO2/year. Consider a hybrid or EV to reduce your carbon footprint.`;
+  }
+  
+  // Risk assessment
+  let riskAssessment = "";
+  const debtToIncome = projection.monthlyBreakdown.total / (data.monthlyIncome + (data.spouseIncome || 0));
+  if (riskTolerance === "low") {
+    if (debtToIncome < 0.10) {
+      riskAssessment = "Low risk, excellent fit! Payment is very manageable at " + Math.round(debtToIncome * 100) + "% of income. You'll have strong financial flexibility.";
+    } else {
+      riskAssessment = "For low risk tolerance, this payment (" + Math.round(debtToIncome * 100) + "% of income) may feel stretched. Consider a lower-cost option or larger down payment.";
+    }
+  } else if (riskTolerance === "medium") {
+    if (debtToIncome < 0.15) {
+      riskAssessment = "Balanced risk profile. Payment is reasonable at " + Math.round(debtToIncome * 100) + "% of income, leaving room for other financial goals.";
+    } else {
+      riskAssessment = "Moderate risk: " + Math.round(debtToIncome * 100) + "% of income. Manageable but requires disciplined budgeting to maintain comfort.";
+    }
+  } else {
+    riskAssessment = debtToIncome < 0.20 
+      ? "Within acceptable range for high risk tolerance (" + Math.round(debtToIncome * 100) + "% of income). Ensure you have emergency savings for unexpected costs."
+      : "High risk: " + Math.round(debtToIncome * 100) + "% of income is aggressive. Strongly consider alternatives to avoid financial strain.";
+  }
+  
+  // Regional considerations
+  let regionalConsiderations: string | undefined;
+  if (region) {
+    const regionUpper = region.toUpperCase();
+    if (["CA", "NY", "NJ", "MA"].includes(regionUpper)) {
+      regionalConsiderations = `In ${region}, fuel prices are typically higher (~$4-5/gal). ` + 
+        (vehicle.fuelType === "electric" || vehicle.fuelType === "hybrid" 
+          ? "Your fuel-efficient choice is especially valuable here, saving significantly on gas costs."
+          : "Consider fuel costs carefully—an EV or hybrid could save you $100-200/month in this region.");
+    } else if (["TX", "OK", "LA", "AL"].includes(regionUpper)) {
+      regionalConsiderations = `In ${region}, fuel prices are typically lower (~$3/gal), making gas vehicles more economical. However, ${vehicle.fuelType === "electric" ? "EV charging" : "gas"} infrastructure is ${vehicle.fuelType === "electric" ? "growing rapidly" : "widely available"}.`;
+    } else if (["CO", "UT", "WY", "MT"].includes(regionUpper)) {
+      const bodyTypeLower = vehicle.bodyType.toLowerCase();
+      regionalConsiderations = `In ${region}, consider winter weather capability. ` + 
+        (bodyTypeLower.includes("suv") || bodyTypeLower.includes("truck")
+          ? "Your vehicle choice offers good ground clearance and AWD options for mountain driving."
+          : "Ensure you have proper tires and consider AWD for winter conditions.");
+    } else {
+      regionalConsiderations = `Regional fuel prices in ${region} should be factored into your total cost. Average fuel cost included in projections.`;
+    }
+  }
+  
+  return {
+    totalCostOfOwnership,
+    yearlyBreakdown: Math.round(yearlyAvgCost),
+    ownershipAlignment,
+    usageOptimization,
+    environmentalImpact,
+    riskAssessment,
+    regionalConsiderations,
+  };
+}
+
 // Generate recommendation
 function generateRecommendation(
   vehicle: Vehicle,
@@ -321,6 +453,7 @@ export async function POST(request: Request) {
         creditImpact,
         rec.rank === 1
       );
+      const lifestyleInsights = generateLifestyleInsights(vehicle, userData, projection);
       
       return {
         vehicleId: vehicle.id,
@@ -330,6 +463,7 @@ export async function POST(request: Request) {
         creditImpact,
         savingsAnalysis,
         recommendation,
+        lifestyleInsights,
       };
     });
     

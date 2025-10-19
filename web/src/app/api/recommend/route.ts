@@ -17,8 +17,127 @@ type OnboardingData = {
     carType?: "sedan" | "suv" | "truck" | "coupe" | "hatchback" | "convertible";
     budget?: number;
     downPayment?: number;
+    fuelPreference?: "any" | "gas" | "hybrid" | "electric" | "gasoline";
+    ownershipYears?: number;
+    region?: string;
+    usage?: "commute" | "family" | "haul" | "mixed";
+    riskTolerance?: "low" | "medium" | "high";
   };
 };
+
+// Minimum income eligibility thresholds
+const MINIMUM_MONTHLY_INCOME = 2500;
+
+// Check if user is eligible for car financing
+function checkEligibility(data: OnboardingData): {
+  eligible: boolean;
+  reason?: string;
+  suggestedActions?: string[];
+} {
+  const totalIncome = data.monthlyIncome + (data.spouseIncome || 0);
+  
+  // Income too low
+  if (totalIncome < MINIMUM_MONTHLY_INCOME) {
+    return {
+      eligible: false,
+      reason: `Your total monthly income ($${totalIncome.toLocaleString()}) is below our minimum requirement of $${MINIMUM_MONTHLY_INCOME.toLocaleString()}.`,
+      suggestedActions: [
+        "Consider increasing your income through additional work or side jobs",
+        "Add a co-signer with higher income",
+        "Save up to purchase a used vehicle with cash",
+        "Look into public transportation or ride-sharing alternatives",
+        "Explore employer transportation benefits or programs"
+      ]
+    };
+  }
+  
+  // Very poor credit with low income
+  if (data.creditScore === "300-579" && totalIncome < 3500) {
+    return {
+      eligible: false,
+      reason: "Your combination of credit score and income level does not meet our financing criteria.",
+      suggestedActions: [
+        "Work on improving your credit score (pay bills on time, reduce debt)",
+        "Increase your monthly income to at least $3,500",
+        "Consider a secured credit card to rebuild credit",
+        "Wait 6-12 months while improving your financial situation",
+        "Explore credit counseling services"
+      ]
+    };
+  }
+  
+  // Check debt-to-income ratio estimation
+  const maxCarPayment = totalIncome * 0.15; // Conservative estimate
+  const minVehiclePrice = 15000; // Cheapest reasonable vehicle
+  const estimatedPayment = minVehiclePrice / 60; // 5-year loan
+  
+  if (maxCarPayment < estimatedPayment) {
+    return {
+      eligible: false,
+      reason: `Based on your income, your maximum recommended car payment is $${Math.round(maxCarPayment)}/month, which may not be sufficient for most vehicles.`,
+      suggestedActions: [
+        "Increase your income or add a co-signer",
+        "Save for a larger down payment to reduce monthly payments",
+        "Consider more affordable used vehicle options",
+        "Look for vehicles under $15,000",
+        "Explore lease options with lower monthly payments"
+      ]
+    };
+  }
+  
+  return { eligible: true };
+}
+
+// Calculate total cost of ownership over 5 years
+function calculateTotalCost(
+  vehicle: Vehicle,
+  monthlyPayment: number,
+  dailyMiles: number,
+  termMonths = 60
+): {
+  totalPurchaseCost: number;
+  totalFuelCost: number;
+  totalMaintenanceCost: number;
+  totalInsuranceCost: number;
+  totalCost: number;
+  resaleValue: number;
+  netCost: number;
+} {
+  const totalPurchaseCost = monthlyPayment * termMonths;
+  
+  // Fuel cost calculation (assume $3.50/gallon for gas, $0.13/kWh for electric)
+  const annualMiles = dailyMiles * 365;
+  let totalFuelCost = 0;
+  
+  if (vehicle.fuelType === "electric") {
+    const kWhPer100Miles = 33; // Average for EVs
+    const costPerKWh = 0.13;
+    totalFuelCost = (annualMiles / 100) * kWhPer100Miles * costPerKWh * 5;
+  } else {
+    const gasCostPerGallon = 3.50;
+    const annualGallons = annualMiles / vehicle.mpgCombined;
+    totalFuelCost = annualGallons * gasCostPerGallon * 5;
+  }
+  
+  const totalMaintenanceCost = (vehicle.maintenanceCostPerYear || 500) * 5;
+  const totalInsuranceCost = (vehicle.insuranceCostPerMonth || 150) * 60;
+  
+  const totalCost = totalPurchaseCost + totalFuelCost + totalMaintenanceCost + totalInsuranceCost;
+  
+  // Resale value after 5 years
+  const resaleValue = vehicle.msrp * ((vehicle.resaleValuePercent || 50) / 100);
+  const netCost = totalCost - resaleValue;
+  
+  return {
+    totalPurchaseCost,
+    totalFuelCost,
+    totalMaintenanceCost,
+    totalInsuranceCost,
+    totalCost,
+    resaleValue,
+    netCost
+  };
+}
 
 // Calculate affordability based on income and credit
 function calculateMaxMonthlyPayment(data: OnboardingData): number {
@@ -69,6 +188,7 @@ function scoreVehicle(vehicle: Vehicle, data: OnboardingData): {
   score: number;
   reasons: string[];
   monthlyPayment: number;
+  costAnalysis: ReturnType<typeof calculateTotalCost>;
 } {
   let score = 0;
   const reasons: string[] = [];
@@ -76,6 +196,7 @@ function scoreVehicle(vehicle: Vehicle, data: OnboardingData): {
   const maxPayment = calculateMaxMonthlyPayment(data);
   const downPayment = data.preferences.downPayment || 0;
   const monthlyPayment = estimateMonthlyPayment(vehicle.msrp, data.creditScore, downPayment);
+  const costAnalysis = calculateTotalCost(vehicle, monthlyPayment, data.dailyMiles);
   
   // 1. Affordability (40% weight)
   if (monthlyPayment <= maxPayment) {
@@ -133,12 +254,10 @@ function scoreVehicle(vehicle: Vehicle, data: OnboardingData): {
     }
   } else {
     // Auto-recommend based on profile
-    // Families or older buyers might prefer SUVs
     if (data.age > 35 && vehicle.bodyType === "suv" && vehicle.seats >= 7) {
       score += 15;
       reasons.push("Spacious family vehicle");
     }
-    // Younger buyers might prefer sedans/hatchbacks
     if (data.age < 30 && (vehicle.bodyType === "sedan" || vehicle.bodyType === "hatchback")) {
       score += 10;
       reasons.push("Great for young professionals");
@@ -166,38 +285,62 @@ function scoreVehicle(vehicle: Vehicle, data: OnboardingData): {
   // 6. Finance path optimization (15% weight)
   const pathPref = data.financePath ?? "buy";
   if (pathPref === "lease") {
-    // Prefer newer, low-depreciation vehicles
     if (vehicle.year >= 2024) {
       score += 10;
       reasons.push("Great lease option");
     }
-    // Hybrids/EVs have good lease incentives
     if (vehicle.fuelType === "hybrid" || vehicle.fuelType === "electric") {
       score += 5;
       reasons.push("Strong lease incentives");
     }
   } else if (pathPref === "buy") {
-    // Prefer reliable, good resale value
     if (vehicle.fuelType === "hybrid") {
       score += 10;
       reasons.push("Excellent resale value");
     }
-    // Long-term fuel savings matter more
     if (vehicle.mpgCombined >= 35) {
       score += 5;
       reasons.push("Long-term fuel savings");
     }
   }
   
-  return { score, reasons, monthlyPayment };
+  return { score, reasons, monthlyPayment, costAnalysis };
 }
 
 export async function POST(request: Request) {
   try {
     const data: OnboardingData = await request.json();
     
-    // Score all vehicles
-    const scored = inventory.map((vehicle) => {
+    // Check eligibility first
+    const eligibility = checkEligibility(data);
+    if (!eligibility.eligible) {
+      return NextResponse.json({
+        ok: false,
+        eligible: false,
+        reason: eligibility.reason,
+        suggestedActions: eligibility.suggestedActions
+      });
+    }
+    
+    // Filter inventory based on higher-level preferences
+    let pool = inventory.slice();
+    
+    // Fuel preference filter
+    if (data.preferences.fuelPreference && data.preferences.fuelPreference !== "any") {
+      const fuelPref = data.preferences.fuelPreference === "gas" ? "gasoline" : data.preferences.fuelPreference;
+      pool = pool.filter((v) => v.fuelType === fuelPref);
+    }
+    
+    // Usage-based filters
+    if (data.preferences.usage === "haul") {
+      pool = pool.filter((v) => v.bodyType === "truck" || v.horsepower >= 250);
+    }
+    if (data.preferences.usage === "family") {
+      pool = pool.filter((v) => v.bodyType === "suv" || v.seats >= 5);
+    }
+
+    // Score filtered vehicles
+    const scored = pool.map((vehicle) => {
       const result = scoreVehicle(vehicle, data);
       return {
         vehicle,
@@ -205,26 +348,75 @@ export async function POST(request: Request) {
       };
     });
     
-    // Sort by score descending and take top 3
-    const recommendations = scored
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-      .map((item, index) => ({
-        rank: index + 1,
-        vehicle: item.vehicle,
-        monthlyPayment: item.monthlyPayment,
-        reasons: item.reasons,
-        score: Math.round(item.score),
-      }));
+    // Sort by score descending
+    const sortedByScore = scored.sort((a, b) => b.score - a.score);
+    
+    // Select top 5 with diversity - avoid multiple trims of same model
+    const recommendations: typeof sortedByScore = [];
+    const usedModels = new Set<string>();
+    
+    for (const item of sortedByScore) {
+      const modelKey = item.vehicle.model;
+      
+      // Always take the top scorer
+      if (recommendations.length === 0) {
+        recommendations.push(item);
+        usedModels.add(modelKey);
+        continue;
+      }
+      
+      // Prefer different models for diversity
+      if (!usedModels.has(modelKey)) {
+        recommendations.push(item);
+        usedModels.add(modelKey);
+      } else if (recommendations.length < 5) {
+        // If we need more cars and this is just a different trim, include it
+        // but only if we don't have 5 diverse models yet
+        const sameModelCount = recommendations.filter(r => r.vehicle.model === modelKey).length;
+        if (sameModelCount < 2) { // Max 2 trims per model
+          recommendations.push(item);
+        }
+      }
+      
+      if (recommendations.length >= 5) break;
+    }
+    
+    // If we still don't have 5, fill with remaining vehicles
+    if (recommendations.length < 5) {
+      for (const item of sortedByScore) {
+        if (!recommendations.includes(item)) {
+          recommendations.push(item);
+          if (recommendations.length >= 5) break;
+        }
+      }
+    }
+    
+    const finalRecommendations = recommendations.map((item, index) => ({
+      rank: index + 1,
+      vehicle: item.vehicle,
+      monthlyPayment: item.monthlyPayment,
+      reasons: item.reasons,
+      score: Math.round(item.score),
+      costAnalysis: item.costAnalysis
+    }));
+    
+    // Calculate average of other cars for comparison
+    const otherCars = sortedByScore.slice(recommendations.length);
+    const avgOtherCost = otherCars.length > 0 
+      ? otherCars.reduce((sum, car) => sum + car.costAnalysis.netCost, 0) / otherCars.length
+      : null;
     
     return NextResponse.json({
       ok: true,
-      recommendations,
+      eligible: true,
+      recommendations: finalRecommendations,
       maxMonthlyPayment: Math.round(calculateMaxMonthlyPayment(data)),
+      averageCompetitorCost: avgOtherCost ? Math.round(avgOtherCost) : null
     });
-  } catch (e: any) {
+  } catch (e) {
+    const error = e as Error;
     return NextResponse.json(
-      { ok: false, error: e?.message ?? "Invalid request" },
+      { ok: false, error: error?.message ?? "Invalid request" },
       { status: 400 }
     );
   }

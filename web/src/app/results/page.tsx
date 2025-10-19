@@ -39,8 +39,12 @@ type Recommendation = {
 
 type ApiResponse = {
   ok: boolean;
-  recommendations: Recommendation[];
-  maxMonthlyPayment: number;
+  eligible?: boolean;
+  reason?: string;
+  suggestedActions?: string[];
+  recommendations?: Recommendation[];
+  maxMonthlyPayment?: number;
+  averageCompetitorCost?: number | null;
 };
 
 export default function ResultsPage() {
@@ -126,6 +130,118 @@ export default function ResultsPage() {
     );
   }
 
+  // Handle ineligibility
+  if (data.ok === false || data.eligible === false) {
+    return (
+      <main className="relative mx-auto max-w-7xl px-6 py-10">
+        <CelestialBackground />
+        <section className="relative z-10 space-y-8">
+          <PageHeader
+            title="We're Sorry"
+            subtitle="Unfortunately, you don't qualify at this time"
+          />
+          
+          <Card className="border-red-400/30 bg-red-500/10 text-white backdrop-blur max-w-3xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl text-red-200">Ineligibility Notice</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-white/90">{data.reason}</p>
+              
+              {data.suggestedActions && data.suggestedActions.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-white">Here's what you can do:</h3>
+                  <ul className="space-y-2 list-disc pl-6">
+                    {data.suggestedActions.map((action, idx) => (
+                      <li key={idx} className="text-white/80">{action}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              <div className="pt-4 flex gap-4">
+                <Button 
+                  onClick={() => router.push("/form")} 
+                  variant="outline"
+                  className="border-white/20 text-white hover:bg-white/10"
+                >
+                  Update Information
+                </Button>
+                <Button 
+                  onClick={() => router.push("/")}
+                  className="bg-white/10 hover:bg-white/20"
+                >
+                  Go Home
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </main>
+    );
+  }
+
+  if (!data.recommendations || data.recommendations.length === 0) {
+    return (
+      <main className="relative mx-auto max-w-7xl px-6 py-10">
+        <CelestialBackground />
+        <section className="relative z-10 space-y-8">
+          <PageHeader
+            title="No Matches Found"
+            subtitle="We couldn't find any vehicles matching your criteria"
+          />
+          <div className="flex justify-center">
+            <Button onClick={() => router.push("/form")} variant="outline">
+              <ArrowLeft className="mr-2 size-4" />
+              Back to form
+            </Button>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // Save comparison data for resume page
+  const saveComparisonData = (vehicle: Vehicle, costAnalysis: any) => {
+    const allVehicles = data.recommendations!.map((rec: any) => ({
+      id: rec.vehicle.id,
+      make: rec.vehicle.make,
+      model: rec.vehicle.model,
+      trim: rec.vehicle.trim,
+      year: rec.vehicle.year,
+      msrp: rec.vehicle.msrp,
+      monthlyPayment: rec.monthlyPayment,
+      netCost: rec.costAnalysis?.netCost || 0,
+      totalFuelCost: rec.costAnalysis?.totalFuelCost || 0,
+      totalMaintenanceCost: rec.costAnalysis?.totalMaintenanceCost || 0,
+      totalInsuranceCost: rec.costAnalysis?.totalInsuranceCost || 0,
+      resaleValue: rec.costAnalysis?.resaleValue || 0,
+      mpgCombined: rec.vehicle.mpgCombined,
+      fuelType: rec.vehicle.fuelType,
+    }));
+
+    const avgNetCost = allVehicles.reduce((sum, v) => sum + v.netCost, 0) / allVehicles.length;
+    const avgMonthlyPayment = allVehicles.reduce((sum, v) => sum + v.monthlyPayment, 0) / allVehicles.length;
+    const avgFuelCost = allVehicles.reduce((sum, v) => sum + v.totalFuelCost, 0) / allVehicles.length;
+    const avgMaintenanceCost = allVehicles.reduce((sum, v) => sum + v.totalMaintenanceCost, 0) / allVehicles.length;
+
+    const chosenData = allVehicles.find(v => v.id === vehicle.id);
+    if (!chosenData) return;
+
+    const savingsData = {
+      chosenVehicle: chosenData,
+      competitorAverage: {
+        netCost: avgNetCost,
+        monthlyPayment: avgMonthlyPayment,
+        totalFuelCost: avgFuelCost,
+        totalMaintenanceCost: avgMaintenanceCost,
+      },
+      allVehicles,
+    };
+
+    localStorage.setItem("carComparison", JSON.stringify(savingsData));
+  };
+
   return (
     <main className="relative mx-auto max-w-7xl px-6 py-10">
       <CelestialBackground />
@@ -133,7 +249,7 @@ export default function ResultsPage() {
         <div className="flex items-start justify-between">
           <PageHeader
             title="Your Perfect Matches"
-            subtitle={`Based on your ${data.maxMonthlyPayment}/mo budget`}
+            subtitle={`Based on your $${data.maxMonthlyPayment}/mo budget`}
           />
           <Button onClick={() => router.push("/form")} variant="ghost" size="sm">
             <ArrowLeft className="mr-2 size-4" />
@@ -226,12 +342,22 @@ export default function ResultsPage() {
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 space-y-2">
                   <Button
                     className="w-full bg-indigo-600 hover:bg-indigo-500"
                     onClick={() => router.push(`/insights/${rec.vehicle.id}`)}
                   >
                     View Insights
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full border-green-400/30 bg-green-500/10 text-green-300 hover:bg-green-500/20"
+                    onClick={() => {
+                      saveComparisonData(rec.vehicle, (rec as any).costAnalysis);
+                      router.push("/resume");
+                    }}
+                  >
+                    See Savings Comparison
                   </Button>
                 </div>
               </CardContent>
